@@ -1,0 +1,8 @@
+[package]
+name = "rust_apple"
+version = "0.1.0"
+authors = ["ZDG"]
+edition = "2018"
+
+[dependencies]
+sdl2 = "0.34"
