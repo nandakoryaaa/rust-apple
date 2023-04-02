@@ -10,6 +10,8 @@ pub trait Controller {
 }
 
 pub struct MainController {
+	pub player_x: i32,
+	pub player_w: u32
 }
 
 impl Controller for MainController {
@@ -17,6 +19,7 @@ impl Controller for MainController {
 		& mut self, stage: & mut Stage,
 		view: & mut MainView, input: & Input
 	) -> bool {
+		let mut updated = false;
 		if input.move_left || input.move_right {
 			// Позволяет взять sw, так как player еще не используется.
 			let sw = stage.w as i32;
@@ -26,22 +29,24 @@ impl Controller for MainController {
 			// поэтому лок распространяется и на stage
 			// лок должен исчезнуть, когда исчезнет player
 
-			let player = stage.get_child(0); //view.get_player(stage); //
 			if input.move_left {
-				if player.rect.x > 0 {
-					player.rect.x -= 1;
+				if self.player_x > 0 {
+					self.player_x -= 1;
+					updated = true;
 				}
 			} else if input.move_right {
-				if player.rect.x < sw - player.rect.w {
-					player.rect.x += 1;
+				if self.player_x < sw - self.player_w as i32 {
+					self.player_x += 1;
+					updated = true;
 				}
 			}
 
-			// Позволяет взять sw, так как player больше не используется. Хотя он все еще в контексте, но считается, что уже нет
-			// let sw = stage.w as i32;
-			return true;
+			if updated {
+				let player = stage.get_child(0); //view.get_player(stage); //
+				player.rect.x = self.player_x;
+			}
 		}
 
-		return false;
+		return updated;
 	}
 }

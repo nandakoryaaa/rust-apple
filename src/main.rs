@@ -38,8 +38,8 @@ fn main() {
 	let cb = sdl2::render::CanvasBuilder::new(window);
 	let mut stage: Stage = Stage::new(800, 600, cb.build().unwrap());
 
-	let mut main_controller = MainController {};
-	let mut controller: & mut dyn Controller = & mut main_controller;
+	let mut main_controller = MainController { player_x: 0, player_w: 16};
+	let controller: & mut dyn Controller = & mut main_controller;
 	
 	let mut view = MainView::new(& mut stage, & renderer_rect);
 

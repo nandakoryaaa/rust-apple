@@ -67,7 +67,7 @@ impl Stage {
 	}
 
 	pub fn draw(& mut self) {
-		self.canvas.set_draw_color(Color::RGB(0,0,0));
+		self.canvas.set_draw_color(Color::RGB(0, 0, 0));
 		self.canvas.fill_rect(None);
 		
 		for i in 0..self.obj_list.len() {
