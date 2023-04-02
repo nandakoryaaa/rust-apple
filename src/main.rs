@@ -13,7 +13,7 @@ use sdl2::keyboard::Keycode;
 
 //use crate::game::GameObject;
 //use crate::game::Renderer as Renderer;
-//use crate::game::RendererRect as RendererRect;
+use crate::game::RendererRect;
 use crate::game::Stage;
 use crate::input::Input;
 
@@ -23,6 +23,8 @@ use crate::controller::MainController;
 use crate::view::MainView;
 
 fn main() {
+	static renderer_rect: RendererRect = RendererRect {};
+
 	let sdl = sdl2::init().unwrap();
 	let vss: sdl2::VideoSubsystem = sdl.video().unwrap();
 	let wb = sdl2::video::WindowBuilder::new(
@@ -36,11 +38,10 @@ fn main() {
 	let cb = sdl2::render::CanvasBuilder::new(window);
 	let mut stage: Stage = Stage::new(800, 600, cb.build().unwrap());
 
-	//let renderer_rect = RendererRect {};
 	let mut main_controller = MainController {};
-	let controller: & mut dyn Controller = & mut main_controller;
+	let mut controller: & mut dyn Controller = & mut main_controller;
 	
-	let mut view = MainView::new(& mut stage);
+	let mut view = MainView::new(& mut stage, & renderer_rect);
 
 	let mut evt_pump = sdl.event_pump().unwrap();
 	let mut input = Input::new();
