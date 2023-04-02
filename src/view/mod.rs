@@ -28,7 +28,7 @@ impl MainView {
 		}
 	}
 
-	pub fn get_player(& self, stage: & mut Stage) -> & mut GameObject {
+	pub fn get_player<'a>(&'a self, stage: &'a mut Stage) -> & mut GameObject {
 		return stage.get_child(0);
 	}
 }

@@ -23,19 +23,19 @@ impl Renderer for RendererRect {
 	}
 }		
 
-pub struct GameObject<'gmo> {
+pub struct GameObject {
 	color: Color,
 	pub rect: Rect,
 	// Renderer должен жить не меньше, чем GameObject
-	renderer: &'gmo dyn Renderer
+	renderer: &'static dyn Renderer
 }
 
-impl<'gmo> GameObject<'gmo> {
+impl GameObject {
 	pub fn new(
 		x: i32, y: i32,
 		w: u32, h: u32,
 		color: Color,
-		renderer: &'gmo dyn Renderer
+		renderer: &'static dyn Renderer
 	) -> Self {
 		Self {
 			color: color,
@@ -45,12 +45,14 @@ impl<'gmo> GameObject<'gmo> {
 	}
 }
 
-pub struct Stage<'st> {
+pub struct Stage {
 	pub w: u32,
 	pub h: u32,
 	canvas: WindowCanvas,
 	// в Vec находятся GameObject, которые должны жить не меньше чем Stage
 	// а как они могут жить меньше, если они принадлежат Vec, а Vec принадлежит Stage?
+	// потому что они содержат ссылки на Renderer
+	// по факту не GameObject, а Renderer должен жить не меньше чем Stage
 	obj_list: Vec<GameObject>
 }
 
