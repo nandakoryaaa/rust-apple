@@ -42,7 +42,7 @@ impl Controller for MainController {
 			}
 
 			if updated {
-				let player = stage.get_child(0); //view.get_player(stage); //
+				let player = view.get_player(stage); //stage.get_child(0); //
 				player.rect.x = self.player_x;
 			}
 		}
