@@ -3,8 +3,10 @@ extern crate sdl2;
 use crate::game::GameObject;
 use crate::game::Stage;
 //use crate::game::Renderer;
-use crate::game::RendererRect;
+use crate::game::render::RendererSpriteRLE;
+use crate::game::render::RendererFactory;
 use crate::sdl2::pixels::Color;
+use crate::data::Sprites;
 
 pub trait View {
 	//pub fn new(& mut self, & mut stage);
@@ -19,9 +21,9 @@ impl View for MainView {
 }
 
 impl MainView {
-	pub fn new(stage: & mut Stage, renderer_rect: &'static RendererRect ) -> Self {
+	pub fn new(stage: & mut Stage, renderer_factory: &'static RendererFactory, sprites: &'static Sprites) -> Self {
 		stage.add_child(
-			GameObject::new(0, 0, 10, 30, Color::RGB(255, 0, 0), renderer_rect) //& RendererRect {})
+			GameObject::new(0, 0, 10, 30, Color::RGB(255, 0, 0), sprites.apple, & renderer_factory.renderer_sprite_rle)
 		);
 		Self {
 			//player: GameObject::new(0, 0, 10, 30, Color::RGB(255, 0, 0), & RendererRect {})
