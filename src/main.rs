@@ -67,6 +67,8 @@ fn main() {
 	let mut input: & mut dyn Input = & mut input_main;
 	let mut running = true;
 
+	stage.draw();
+
 	while running {
 		let evt_option = evt_pump.poll_event();
 		if evt_option != None { 
