@@ -1,12 +1,9 @@
 extern crate sdl2;
-
-use crate::game::GameObject;
+use sdl2::pixels::Color;
+//use crate::game::GMO::GmoSpriteRLE;
+use crate::game::GMO;
 use crate::game::Stage;
-//use crate::game::Renderer;
-use crate::game::render::RendererSpriteRLE;
 use crate::game::render::RendererFactory;
-use crate::sdl2::pixels::Color;
-use crate::data::Sprites;
 
 pub trait View {
 	//pub fn new(& mut self, & mut stage);
@@ -21,16 +18,28 @@ impl View for MainView {
 }
 
 impl MainView {
-	pub fn new(stage: & mut Stage, renderer_factory: &'static RendererFactory, sprites: &'static Sprites) -> Self {
+	pub fn new(stage: & mut Stage, renderer_factory: &'static RendererFactory) -> Self {
 		stage.add_child(
-			GameObject::new(0, 0, 10, 30, Color::RGB(255, 0, 0), sprites.apple, & renderer_factory.renderer_sprite_rle)
+			GMO::newGmoSprite(
+				0, 0, 10, 30,
+				& renderer_factory.sprites.apple,
+				& renderer_factory.renderer_sprite_rle
+			)
+		);
+		stage.add_child(
+			GMO::newGmoText(
+				100, 200,
+				Color::RGB(0, 255, 0),
+				& "APPLE GAME",
+				& renderer_factory.renderer_text
+			)
 		);
 		Self {
 			//player: GameObject::new(0, 0, 10, 30, Color::RGB(255, 0, 0), & RendererRect {})
 		}
 	}
 
-	pub fn get_player<'a>(& self, stage: &'a mut Stage) -> &'a mut GameObject {
+	pub fn get_player<'a>(& self, stage: &'a mut Stage) -> &'a mut GMO {
 		return stage.get_child(0);
 	}
 }

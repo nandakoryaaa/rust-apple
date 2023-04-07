@@ -7,7 +7,7 @@ pub mod data;
 extern crate sdl2;
 
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
+//use sdl2::keyboard::Keycode;
 
 use crate::game::render::RendererRect;
 use crate::game::render::RendererSpriteRLE;
@@ -15,6 +15,7 @@ use crate::game::render::RendererText;
 use crate::game::render::RendererFactory;
 use crate::game::Stage;
 use crate::input::Input;
+use crate::input::InputMain;
 
 use crate::controller::Controller;
 use crate::controller::MainController;
@@ -30,26 +31,15 @@ fn main() {
 		renderer_rect: RendererRect {},
 		renderer_sprite_rle: RendererSpriteRLE {
 			palette: & PALETTE,
-			pixel_width: 4,
-			pixel_height: 3
+			pixel_width: 16,
+			pixel_height: 12
 		},
 		renderer_text: RendererText {
 			font: & FONT
+		},
+		sprites: Sprites {
+			apple: & SPRITE_APPLE
 		}
-	};
-
-	static renderer_rect: RendererRect = RendererRect {};
-	static renderer_sprite_rle: RendererSpriteRLE = RendererSpriteRLE {
-		palette: & PALETTE,
-		pixel_width: 4,
-		pixel_height: 3
-	};
-	static renderer_text: RendererText = RendererText {
-		font: & FONT
-	};
-
-	static sprites:Sprites = Sprites {
-		apple: & SPRITE_APPLE
 	};
 
 	let sdl = sdl2::init().unwrap();
@@ -70,10 +60,11 @@ fn main() {
 	let mut main_controller = MainController { player_x: 0, player_w: 16};
 	let controller: & mut dyn Controller = & mut main_controller;
 
-	let mut view = MainView::new(& mut stage, & renderer_factory,  & sprites);
+	let mut view = MainView::new(& mut stage, & renderer_factory);
 
 	let mut evt_pump = sdl.event_pump().unwrap();
-	let mut input = Input::new();
+	let mut input_main = InputMain::new();
+	let mut input: & mut dyn Input = & mut input_main;
 	let mut running = true;
 
 	while running {
@@ -85,18 +76,12 @@ fn main() {
 					running = false;
 				},
 				Event::KeyDown { keycode: Some(k), .. } => {
-					if k == Keycode::Left {
-						input.move_left();
-					} else if k == Keycode::Right {
-						input.move_right();
-					} else if k == Keycode::Space {
-						input.stop();
-					}
+					input.set_event(k);
 				},
 				_ => ()
 			}
 
-			if controller.update(& mut stage, & mut view, & input) {
+			if controller.update(& mut stage, & mut view, input) {
 				stage.draw();
 			}
 		}

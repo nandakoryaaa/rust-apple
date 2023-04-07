@@ -1,11 +1,9 @@
 use sdl2::pixels::Color;
-//use sdl2::pixels::PixelFormatEnum;
-//use sdl2::pixels::PixelFormat;
 
 pub static PALETTE:[Color;4] = [
 	Color::RGB(0, 0, 0),
-	Color::RGB(255, 3, 0),
-	Color::RGB(3, 255, 0),
+	Color::RGB(255, 0, 0),
+	Color::RGB(0, 255, 0),
 	Color::RGB(0, 0, 255)
 ];
 
