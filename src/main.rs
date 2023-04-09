@@ -21,10 +21,11 @@ use crate::controller::Controller;
 use crate::controller::MainController;
 
 use crate::view::MainView;
-use crate::data::Sprites;
+use crate::data::SpriteCentral;
 use crate::data::SPRITE_APPLE;
 use crate::data::PALETTE;
 use crate::data::FONT;
+use crate::data::SPRITE_CENTRAL;
 
 fn main() {
 	static renderer_factory: RendererFactory = RendererFactory {
@@ -37,9 +38,7 @@ fn main() {
 		renderer_text: RendererText {
 			font: & FONT
 		},
-		sprites: Sprites {
-			apple: & SPRITE_APPLE
-		}
+		sprites: & SPRITE_CENTRAL
 	};
 
 	let sdl = sdl2::init().unwrap();

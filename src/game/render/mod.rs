@@ -5,7 +5,8 @@ use sdl2::pixels::Color;
 use sdl2::render::WindowCanvas;
 //use crate::game::GameObject;
 //use crate::game::GMO;
-use crate::data::Sprites;
+use crate::data::Sprite;
+use crate::data::SpriteCentral;
 
 pub struct RendererRect {}
 
@@ -29,12 +30,13 @@ pub struct RendererSpriteRLE {
 impl RendererSpriteRLE {
 	pub fn render(
 		& self, canvas: & mut WindowCanvas,
-		rle: &[u8]
+		sprite: & Sprite
 	) {
 		let mut x:i32 = 0;
 		let mut y:i32 = 0;
-		let w:i32 = 8;
+		let w:i32 = sprite.w as i32;
 		let mut pos:usize = 0;
+		let rle: & [u8] = & sprite.data;
 		let rle_len:usize = rle.len();
 		let mut len:i32 = 0;
 
@@ -116,6 +118,6 @@ pub struct RendererFactory {
 	pub renderer_rect: RendererRect,
 	pub renderer_sprite_rle: RendererSpriteRLE,
 	pub renderer_text: RendererText,
-	pub sprites: Sprites
+	pub sprites: &'static SpriteCentral
 }
 

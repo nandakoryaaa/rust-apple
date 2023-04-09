@@ -22,7 +22,7 @@ impl MainView {
 		stage.add_child(
 			GMO::newGmoSprite(
 				0, 0, 10, 30,
-				& renderer_factory.sprites.apple,
+				& renderer_factory.sprites.player_stand,
 				& renderer_factory.renderer_sprite_rle
 			)
 		);

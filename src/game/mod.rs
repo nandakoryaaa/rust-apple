@@ -9,6 +9,7 @@ use sdl2::render::WindowCanvas;
 use crate::game::render::RendererRect;
 use crate::game::render::RendererSpriteRLE;
 use crate::game::render::RendererText;
+use crate::data::Sprite;
 
 pub enum GMO {
 	GmoRect {
@@ -24,7 +25,7 @@ pub enum GMO {
 		y: i32,
 		w: u32,
 		h: u32,
-		sprite: &'static [u8],
+		sprite: &'static Sprite, //[u8],
 		renderer: &'static RendererSpriteRLE
 	},
 	GmoText {
@@ -60,7 +61,7 @@ impl GMO {
 		y: i32,
 		w: u32,
 		h: u32,
-		sprite: &'static [u8],
+		sprite: &'static Sprite,
 		renderer: &'static RendererSpriteRLE
 	) -> Self {
 		GMO::GmoSprite {
