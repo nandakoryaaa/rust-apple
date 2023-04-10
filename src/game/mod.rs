@@ -8,8 +8,10 @@ use sdl2::render::WindowCanvas;
 
 use crate::game::render::RendererRect;
 use crate::game::render::RendererSpriteRLE;
+use crate::game::render::RendererSpriteAnimation;
 use crate::game::render::RendererText;
 use crate::data::Sprite;
+use crate::data::SpriteAnimation;
 
 pub enum GMO {
 	GmoRect {
@@ -27,6 +29,14 @@ pub enum GMO {
 		h: u32,
 		sprite: &'static Sprite, //[u8],
 		renderer: &'static RendererSpriteRLE
+	},
+	GmoAnimation {
+		x: i32,
+		y: i32,
+		w: u32,
+		h: u32,
+		animation: &'static SpriteAnimation,
+		renderer: &'static RendererSpriteAnimation
 	},
 	GmoText {
 		x: i32,
@@ -59,17 +69,31 @@ impl GMO {
 	pub fn newGmoSprite(
 		x: i32,
 		y: i32,
-		w: u32,
-		h: u32,
 		sprite: &'static Sprite,
 		renderer: &'static RendererSpriteRLE
 	) -> Self {
 		GMO::GmoSprite {
 			x: x,
 			y: y,
-			w: w,
-			h: h,
+			w: sprite.w,
+			h: sprite.h,
 			sprite: sprite,
+			renderer: renderer
+		}
+	}
+
+	pub fn newGmoAnimation(
+		x: i32,
+		y: i32,
+		animation: &'static SpriteAnimation,
+		renderer: &'static RendererSpriteAnimation
+	) -> Self {
+		GMO::GmoAnimation {
+			x: x,
+			y: y,
+			w: animation.get_w(),
+			h: animation.get_h(),
+			animation: animation,
 			renderer: renderer
 		}
 	}
@@ -92,7 +116,7 @@ impl GMO {
 
 	pub fn render(& self, canvas: & mut WindowCanvas) {
 		match self {
-			GMO::GmoSprite { renderer: r, sprite: s, .. } => { r.render(canvas, s); },
+			GMO::GmoSprite { renderer: r, sprite: s, x: x, y: y, .. } => { r.render(canvas, *x, *y, s); },
 			GMO::GmoText { renderer: r, color: c, x: x, y: y, text: t, .. } => { r.render(canvas, *x, *y, *c, t); },
 			_ => ()
 		}

@@ -87,10 +87,19 @@ pub struct Sprite {
 }
 
 pub struct SpriteAnimation {
-	pub frame_cnt: u32,
-	pub frame: u32,
+	pub frame_cnt: usize,
+	pub frame: usize,
 	pub delay: u32,
 	pub timeline: &'static [&'static Sprite]
+}
+
+impl SpriteAnimation {
+	pub fn get_w(& self) -> u32 {
+		self.timeline[self.frame].w
+	}
+	pub fn get_h(& self) -> u32 {
+		self.timeline[self.frame].h
+	}
 }
 
 pub struct SpriteCentral {
@@ -134,8 +143,4 @@ pub static SPRITE_CENTRAL: SpriteCentral = SpriteCentral {
 		]
 	}
 };
-
-pub struct Sprites {
-	pub apple: &'static [u8]
-}
 

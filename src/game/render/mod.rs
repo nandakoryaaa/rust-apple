@@ -3,9 +3,9 @@ extern crate sdl2;
 use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2::render::WindowCanvas;
-//use crate::game::GameObject;
-//use crate::game::GMO;
+use crate::game::GMO;
 use crate::data::Sprite;
+use crate::data::SpriteAnimation;
 use crate::data::SpriteCentral;
 
 pub struct RendererRect {}
@@ -30,15 +30,16 @@ pub struct RendererSpriteRLE {
 impl RendererSpriteRLE {
 	pub fn render(
 		& self, canvas: & mut WindowCanvas,
+		s_x: i32, s_y: i32,
 		sprite: & Sprite
 	) {
-		let mut x:i32 = 0;
-		let mut y:i32 = 0;
 		let w:i32 = sprite.w as i32;
 		let mut pos:usize = 0;
 		let rle: & [u8] = & sprite.data;
 		let rle_len:usize = rle.len();
 		let mut len:i32 = 0;
+		let mut x = 0;
+		let mut y = s_y;
 
 		while pos < rle_len {
 			let mut index = rle[pos];
@@ -62,7 +63,7 @@ impl RendererSpriteRLE {
 					let chunk = if limit < len { limit } else { len };
 					canvas.fill_rect(
 						Rect::new(
-							x * self.pixel_width,
+							(s_x + x) * self.pixel_width,
 							y * self.pixel_height,
 							(chunk * self.pixel_width) as u32,
 							self.pixel_height as u32
@@ -78,6 +79,21 @@ impl RendererSpriteRLE {
 			}
 		}
 	}
+}
+
+pub struct RendererSpriteAnimation {
+	pub renderer: &'static RendererSpriteRLE
+}
+
+impl RendererSpriteAnimation {
+	pub fn render(
+		& self, canvas: & mut WindowCanvas,
+		x: i32, y: i32,
+		ani: & SpriteAnimation
+	) {
+		let sprite: & Sprite = & ani.timeline[ani.frame];
+		self.renderer.render(canvas, x, y, sprite);
+	}	
 }
 
 pub struct RendererText {

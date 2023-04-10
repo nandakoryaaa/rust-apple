@@ -21,7 +21,7 @@ impl MainView {
 	pub fn new(stage: & mut Stage, renderer_factory: &'static RendererFactory) -> Self {
 		stage.add_child(
 			GMO::newGmoSprite(
-				0, 0, 10, 30,
+				10, 10,
 				& renderer_factory.sprites.player_stand,
 				& renderer_factory.renderer_sprite_rle
 			)
