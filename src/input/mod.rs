@@ -1,5 +1,5 @@
-//use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+
 #[derive (Copy, Clone)]
 pub enum InputEvent {
 	Empty,
@@ -21,7 +21,25 @@ pub trait Input {
 pub struct InputMain {
 	evt: InputEvent,
 	move_left: bool,
-	move_right: bool,
+	move_right: bool
+}
+
+pub struct InputMenu {
+	evt: InputEvent,
+	item_prev: bool,
+	item_next: bool,
+	item_select: bool
+}
+
+impl InputMenu {
+	pub fn new() -> Self {
+		Self {
+			evt: InputEvent::Empty,
+			item_prev: false,
+			item_next: false,
+			item_select: false
+		}
+	}
 }
 
 impl InputMain {
@@ -31,6 +49,31 @@ impl InputMain {
 			move_left: false,
 			move_right: false
 		}
+	}
+}
+
+impl Input for InputMenu {
+	fn set_event(& mut self, k: Keycode) -> bool {
+		if k == Keycode::Left {
+			self.evt = InputEvent::ItemPrev;
+		} else if k == Keycode::Right {
+			self.evt = InputEvent::ItemNext;
+		} else if k == Keycode::Space || k == Keycode::Return {
+			self.evt = InputEvent::ItemSelect;
+		} else {
+			self.evt = InputEvent::Empty;
+			return false;
+		}
+
+		true
+	}
+
+	fn clear(& mut self) {
+		self.evt = InputEvent::Empty;
+	}
+
+	fn get_event(& self) -> InputEvent {
+		self.evt
 	}
 }
 

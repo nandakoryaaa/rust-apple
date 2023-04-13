@@ -1,6 +1,5 @@
-use crate::game::{ Stage, PlayerAnimationState };
+use crate::game::{ PlayerAnimationState };
 use crate::input::{ Input, InputEvent };
-use crate::view::{ View, MainView };
 use crate::model::{ Model };
 
 pub trait Controller {
@@ -9,15 +8,15 @@ pub trait Controller {
 	fn get_model(& self) -> & Model;
 }
 
-pub struct MainController {
+pub struct ControllerMain {
 	pub model: Model
 }
 
-pub struct MenuController {
+pub struct ControllerMenu {
 	pub model: Model
 }
 
-impl Controller for MenuController {
+impl Controller for ControllerMenu {
 	fn get_model(& self) -> & Model {
 		& self.model
 	}
@@ -27,7 +26,7 @@ impl Controller for MenuController {
 	) -> bool {
 		let mut updated = false;
 		let evt: InputEvent = input.get_event();
-		let mut m = & mut self.model;
+		let m = & mut self.model;
 		match m {
 			Model::MenuModel { level, .. } => {
 				match evt {
@@ -38,7 +37,7 @@ impl Controller for MenuController {
 						updated = true;
 					}
 					InputEvent::ItemNext => {
-						if *level < 9 {
+						if *level < 8 {
 							*level += 1;
 						}
 						updated = true;
@@ -56,7 +55,7 @@ impl Controller for MenuController {
 	}
 }
 
-impl Controller for MainController {
+impl Controller for ControllerMain {
 	fn get_model(& self) -> & Model {
 		& self.model
 	}
@@ -66,7 +65,7 @@ impl Controller for MainController {
 	) -> bool {
 		let mut updated = true;
 		let evt: InputEvent = input.get_event();
-		let mut m = & mut self.model;
+		let m = & mut self.model;
 		match m {
 			Model::MainModel { player_x, player_state, grid_w, .. } => {
 				match evt {

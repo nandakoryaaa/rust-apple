@@ -31,14 +31,6 @@ impl GmoFactory {
 		}
 	}
 
-	pub fn get_state(&'static self, state: PlayerAnimationState) -> & SpriteSequence {
-		match state {
-			PlayerAnimationState::MoveLeft => { & self.sq_player_move_l },
-			PlayerAnimationState::MoveRight => { & self.sq_player_move_r },
-			_ => { & self.sq_player_stand }
-		}
-	}
-
 	pub fn create_text(&'static self, x: i32, y: i32, color: Color, text: &'static str) -> GMO {
 		GMO::GmoText {
 			x: x,
@@ -59,4 +51,13 @@ impl GmoFactory {
 			renderer: & self.renderer_sprite_rle
 		}
 	}
+
+	pub fn get_state(&'static self, state: PlayerAnimationState) -> & SpriteSequence {
+		match state {
+			PlayerAnimationState::MoveLeft => { & self.sq_player_move_l },
+			PlayerAnimationState::MoveRight => { & self.sq_player_move_r },
+			_ => { & self.sq_player_stand }
+		}
+	}
+
 }

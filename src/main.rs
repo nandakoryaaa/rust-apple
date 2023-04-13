@@ -13,10 +13,10 @@ use sdl2::event::Event;
 use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, Sprite, SpriteSequence };
 use crate::factory::{ GmoFactory };
 use crate::game::{ Stage, PlayerAnimationState };
-use crate::input::{ Input, InputMain };
-use crate::controller::{ Controller, MainController };
+use crate::input::{ Input, InputMenu, InputMain };
+use crate::controller::{ Controller, ControllerMenu, ControllerMain };
 
-use crate::view::{ View, MainView };
+use crate::view::{ View, ViewMenu, ViewMain };
 use crate::data::{ SPRITE_APPLE, PALETTE, FONT };
 use crate::data as cd; //::{ SPRITE_PLAYER_0,  SPRITE_PLAYER_2,  SPRITE_PLAYER_2,  SPRITE_PLAYER_3, SPRITE_PLAYER_4, SPRITE_PLAYER_5,;
 
@@ -48,32 +48,39 @@ static gmo_factory: GmoFactory = GmoFactory {
 	},
 	renderer_rect: RendererRect {},
 	renderer_text: RendererText {
+		pixel_width: 1,
+		pixel_height: 1,
 		font: & FONT
 	},
 	renderer_sprite_rle: RendererSpriteRLE {
 		palette: & PALETTE,
-		pixel_width: 16,
-		pixel_height: 12
+		pixel_width: 1,
+		pixel_height: 1
 	}, 
 };
 
 fn main() {
+	let window_width:u32 = 1024;
+	let window_height:u32 = 768;
+
 	let sdl = sdl2::init().unwrap();
 	let vss: sdl2::VideoSubsystem = sdl.video().unwrap();
 	let wb = sdl2::video::WindowBuilder::new(
 		& vss,
 		"GMO APPLE",
-		800,
-		600
+		window_width,
+		window_height
 	);
 
 	let window: sdl2::video::Window = wb.build().unwrap();
 	let cb = sdl2::render::CanvasBuilder::new(window);
-	let canvas = cb.build().unwrap();
+	let mut canvas = cb.build().unwrap();
 
-	let mut stage: Stage = Stage::new(800, 600, canvas);
+	let mut stage: Stage = Stage::new(window_width, window_height, 256, 256);
+//	gmo_factory.renderer_sprite_rle.pixel_width = stage.pixel_width as i32;
+//	gmo_factory.renderer_sprite_rle.pixel_height = stage.pixel_height as i32;
 
-	let mut main_controller = MainController {
+/*	let mut controller_main = ControllerMain {
 		model: Model::MainModel {
 			grid_w: 28,
 			grid_h: 10,
@@ -88,19 +95,27 @@ fn main() {
 			apples_lost: 0
 		}
 	};
+*/
+	let mut controller_menu = ControllerMenu {
+		model: Model::MenuModel {
+			level: 0
+		}
+	};
 
-	let controller: & mut dyn Controller = & mut main_controller;
+//	let mut input_main = InputMain::new();
+	let mut input_menu = InputMenu::new();
 
-	let mut main_view = MainView::new(& mut stage, & gmo_factory);
+//	let mut view_main = ViewMain::new(& mut stage, & gmo_factory);
+	let mut view_menu = ViewMenu::new(& mut stage, & gmo_factory);
 
-	let view: & mut dyn View = & mut main_view;
+	let controller: & mut dyn Controller = & mut controller_menu;
+	let view: & mut dyn View = & mut view_menu;
+	let input: & mut dyn Input = & mut input_menu;
 
 	let mut evt_pump = sdl.event_pump().unwrap();
-	let mut input_main = InputMain::new();
-	let input: & mut dyn Input = & mut input_main;
 	let mut running = true;
 
-	stage.draw();
+	stage.draw(& mut canvas);
 
 	while running {
 		let evt_option = evt_pump.poll_event();
@@ -118,8 +133,8 @@ fn main() {
 
 			if controller.update(input) {
 				input.clear();
-				view.update(& mut stage, controller.get_model());
-				stage.draw();
+				view.update(& mut stage, & controller.get_model());
+				stage.draw(& mut canvas);
 			}
 		}
 	}

@@ -3,6 +3,7 @@ extern crate sdl2;
 use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2::render::WindowCanvas;
+use crate::game::Stage;
 
 pub struct Sprite {
 	pub w: u32,
@@ -28,12 +29,19 @@ pub struct RendererRect {}
 
 impl RendererRect {
 	pub fn render(
-		& self, canvas: & mut WindowCanvas,
+		& self, stage: & Stage, canvas: & mut WindowCanvas,
 		color: Color,
 		rect: Rect
 	) {
 		canvas.set_draw_color(color);
 		canvas.fill_rect(rect);
+//			Rect::new(
+//				rect.x * (stage.pixel_width as i32),
+//				rect.y * (stage.pixel_height as i32),
+//			 	(rect.w * (stage.pixel_width as i32)) as u32,
+//				(rect.h * (stage.pixel_height as i32)) as u32 // WTF???
+//			)
+//		);
 	}
 }
 
@@ -45,10 +53,12 @@ pub struct RendererSpriteRLE {
 
 impl RendererSpriteRLE {
 	pub fn render(
-		& self, canvas: & mut WindowCanvas,
+		& self, stage: & Stage, canvas: & mut WindowCanvas,
 		s_x: i32, s_y: i32,
 		sprite: & Sprite
 	) {
+		let pw = stage.pixel_width;
+		let ph = stage.pixel_height;
 		let w:i32 = sprite.w as i32;
 		let mut pos:usize = 0;
 		let rle: & [u8] = sprite.data;
@@ -79,10 +89,10 @@ impl RendererSpriteRLE {
 					let chunk = if limit < len { limit } else { len };
 					canvas.fill_rect(
 						Rect::new(
-							(s_x + x) * self.pixel_width,
-							y * self.pixel_height,
-							(chunk * self.pixel_width) as u32,
-							self.pixel_height as u32
+							(s_x + x) * pw as i32,
+							y * ph as i32,
+							(chunk * pw as i32) as u32,
+							ph
 						)
 					);
 					len -= chunk;
@@ -102,32 +112,36 @@ pub struct RendererSpriteAnimation {
 }
 
 pub struct RendererText {
+	pub pixel_width: u32,
+	pub pixel_height: u32,
 	pub font: &'static [u8]
 }
 
 impl RendererText {
-	pub fn render(& self, canvas: & mut WindowCanvas, x:i32, y:i32, color: Color, s: & str) {
+	pub fn render(& self, stage: & Stage, canvas: & mut WindowCanvas, x:i32, y:i32, color: Color, s: & str) {
 		let bytes = s.as_bytes();
 		let s_len = bytes.len();
-		let mut i = 0;
-		let mut rect: Rect = Rect::new(x, y, 8, 8);
+		let pw = stage.pixel_width;
+		let ph = stage.pixel_height;
+		let mut rect: Rect = Rect::new(x, y, pw, ph);
 		canvas.set_draw_color(color);
+		let mut i = 0;
 		while i < s_len {
 			let c:u8 = bytes[i];
 			if c >= b'A' && c <= b'Z' {
 				let idx = ((c - b'A') * 7) as usize;
-				rect.y = y;
+				rect.y = y * ph as i32;
 				for byte_pos in 0..7 {
-					rect.x = x + (i * 8 * 8) as i32;
+					rect.x = (x + i as i32 * 8) * pw as i32;
 					let mut byte = self.font[idx + byte_pos];
 					while byte != 0 {
 						if byte & 1 != 0 {
 							canvas.fill_rect(rect);
 						}
 						byte >>= 1;
-						rect.x += 8;
+						rect.x += pw as i32;
 					}
-					rect.y += 8;
+					rect.y += ph as i32;
 				}
 			}
 			i += 1;
