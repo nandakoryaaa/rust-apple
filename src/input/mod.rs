@@ -7,7 +7,7 @@ pub enum InputEvent {
 	MoveRight,
 	Stop,
 	Jump,
-	ItempPrev,
+	ItemPrev,
 	ItemNext,
 	ItemSelect
 }
@@ -15,6 +15,7 @@ pub enum InputEvent {
 pub trait Input {
 	fn set_event(& mut self, k: Keycode) -> bool;
 	fn get_event(& self) -> InputEvent;
+	fn clear(& mut self);
 }
 
 pub struct InputMain {
@@ -53,6 +54,10 @@ impl Input for InputMain {
 		}
 
 		true
+	}
+
+	fn clear(& mut self) {
+		self.evt = InputEvent::Empty;
 	}
 
 	fn get_event(& self) -> InputEvent {

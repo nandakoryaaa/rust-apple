@@ -3,10 +3,26 @@ extern crate sdl2;
 use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2::render::WindowCanvas;
-use crate::game::GMO;
-use crate::data::Sprite;
-use crate::data::SpriteAnimation;
-use crate::data::SpriteCentral;
+
+pub struct Sprite {
+	pub w: u32,
+	pub h: u32,
+	pub data: &'static [u8]
+}
+
+pub struct SpriteSequence {
+	pub frame_cnt: usize,
+	pub frames: &'static [&'static Sprite]
+}
+
+impl SpriteSequence {
+	pub fn get_w(& self, frame: usize) -> u32 {
+		self.frames[frame].w
+	}
+	pub fn get_h(& self, frame: usize) -> u32 {
+		self.frames[frame].h
+	}
+}
 
 pub struct RendererRect {}
 
@@ -35,9 +51,9 @@ impl RendererSpriteRLE {
 	) {
 		let w:i32 = sprite.w as i32;
 		let mut pos:usize = 0;
-		let rle: & [u8] = & sprite.data;
+		let rle: & [u8] = sprite.data;
 		let rle_len:usize = rle.len();
-		let mut len:i32 = 0;
+		let mut len:i32;
 		let mut x = 0;
 		let mut y = s_y;
 
@@ -85,17 +101,6 @@ pub struct RendererSpriteAnimation {
 	pub renderer: &'static RendererSpriteRLE
 }
 
-impl RendererSpriteAnimation {
-	pub fn render(
-		& self, canvas: & mut WindowCanvas,
-		x: i32, y: i32,
-		ani: & SpriteAnimation
-	) {
-		let sprite: & Sprite = & ani.timeline[ani.frame];
-		self.renderer.render(canvas, x, y, sprite);
-	}	
-}
-
 pub struct RendererText {
 	pub font: &'static [u8]
 }
@@ -128,12 +133,5 @@ impl RendererText {
 			i += 1;
 		}
 	}
-}
-
-pub struct RendererFactory {
-	pub renderer_rect: RendererRect,
-	pub renderer_sprite_rle: RendererSpriteRLE,
-	pub renderer_text: RendererText,
-	pub sprites: &'static SpriteCentral
 }
 

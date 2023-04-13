@@ -3,49 +3,66 @@ pub mod input;
 pub mod controller;
 pub mod view;
 pub mod data;
+pub mod model;
+pub mod factory;
+pub mod render;
 
 extern crate sdl2;
-
 use sdl2::event::Event;
-//use sdl2::keyboard::Keycode;
 
-use crate::game::render::RendererRect;
-use crate::game::render::RendererSpriteRLE;
-use crate::game::render::RendererText;
-use crate::game::render::RendererFactory;
-use crate::game::Stage;
-use crate::input::Input;
-use crate::input::InputMain;
+use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, Sprite, SpriteSequence };
+use crate::factory::{ GmoFactory };
+use crate::game::{ Stage, PlayerAnimationState };
+use crate::input::{ Input, InputMain };
+use crate::controller::{ Controller, MainController };
 
-use crate::controller::Controller;
-use crate::controller::MainController;
+use crate::view::{ View, MainView };
+use crate::data::{ SPRITE_APPLE, PALETTE, FONT };
+use crate::data as cd; //::{ SPRITE_PLAYER_0,  SPRITE_PLAYER_2,  SPRITE_PLAYER_2,  SPRITE_PLAYER_3, SPRITE_PLAYER_4, SPRITE_PLAYER_5,;
 
-use crate::view::MainView;
-use crate::data::SpriteCentral;
-use crate::data::SPRITE_APPLE;
-use crate::data::PALETTE;
-use crate::data::FONT;
-use crate::data::SPRITE_CENTRAL;
+use crate::model::Model;
+
+static gmo_factory: GmoFactory = GmoFactory {
+	sp_apple: Sprite { w: 8, h: 10, data: & SPRITE_APPLE },
+	sq_player_stand: SpriteSequence { frame_cnt: 1, frames: & [& Sprite { w: 22, h: 30, data: & cd::SPRITE_PLAYER_0 }] },
+	sq_player_stand_l: SpriteSequence { frame_cnt: 1, frames: & [& Sprite { w: 32, h: 30, data: & cd::SPRITE_PLAYER_L_0 }] },
+	sq_player_stand_r: SpriteSequence { frame_cnt: 1, frames: & [& Sprite { w: 32, h: 30, data: & cd::SPRITE_PLAYER_R_0 }] },
+	sq_player_move_l: SpriteSequence {
+		frame_cnt: 2,
+		frames: & [& Sprite { w: 32, h: 30, data: & cd::SPRITE_PLAYER_L_1 }, & Sprite { w: 32, h: 30, data: & cd::SPRITE_PLAYER_L_2 }]
+	},
+	sq_player_move_r: SpriteSequence {
+		frame_cnt: 2,
+		frames: & [& Sprite { w: 32, h: 30, data: & cd::SPRITE_PLAYER_R_1 }, & Sprite { w: 32, h: 30, data: & cd::SPRITE_PLAYER_R_2 }]
+	},
+	sq_player_death: SpriteSequence {
+		frame_cnt: 2,
+		frames: & [
+			& Sprite { w: 22, h: 30, data: & cd::SPRITE_PLAYER_1 },
+			& Sprite { w: 22, h: 30, data: & cd::SPRITE_PLAYER_2 },
+			& Sprite { w: 23, h: 30, data: & cd::SPRITE_PLAYER_3 },
+			& Sprite { w: 23, h: 30, data: & cd::SPRITE_PLAYER_4 },
+			& Sprite { w: 24, h: 30, data: & cd::SPRITE_PLAYER_5 },
+			& Sprite { w: 24, h: 30, data: & cd::SPRITE_PLAYER_6 },
+		]
+	},
+	renderer_rect: RendererRect {},
+	renderer_text: RendererText {
+		font: & FONT
+	},
+	renderer_sprite_rle: RendererSpriteRLE {
+		palette: & PALETTE,
+		pixel_width: 16,
+		pixel_height: 12
+	}, 
+};
 
 fn main() {
-	static renderer_factory: RendererFactory = RendererFactory {
-		renderer_rect: RendererRect {},
-		renderer_sprite_rle: RendererSpriteRLE {
-			palette: & PALETTE,
-			pixel_width: 16,
-			pixel_height: 12
-		},
-		renderer_text: RendererText {
-			font: & FONT
-		},
-		sprites: & SPRITE_CENTRAL
-	};
-
 	let sdl = sdl2::init().unwrap();
 	let vss: sdl2::VideoSubsystem = sdl.video().unwrap();
 	let wb = sdl2::video::WindowBuilder::new(
 		& vss,
-		"APPLE",
+		"GMO APPLE",
 		800,
 		600
 	);
@@ -56,14 +73,31 @@ fn main() {
 
 	let mut stage: Stage = Stage::new(800, 600, canvas);
 
-	let mut main_controller = MainController { player_x: 0, player_w: 16};
+	let mut main_controller = MainController {
+		model: Model::MainModel {
+			grid_w: 28,
+			grid_h: 10,
+			player_x: 5,
+			player_y: 10,
+			player_state: PlayerAnimationState::Stand,
+			player_frame: 0,
+			apple_x: 0,
+			apple_y: 0,
+			apples_collected: 0,
+			apples_left: 10,
+			apples_lost: 0
+		}
+	};
+
 	let controller: & mut dyn Controller = & mut main_controller;
 
-	let mut view = MainView::new(& mut stage, & renderer_factory);
+	let mut main_view = MainView::new(& mut stage, & gmo_factory);
+
+	let view: & mut dyn View = & mut main_view;
 
 	let mut evt_pump = sdl.event_pump().unwrap();
 	let mut input_main = InputMain::new();
-	let mut input: & mut dyn Input = & mut input_main;
+	let input: & mut dyn Input = & mut input_main;
 	let mut running = true;
 
 	stage.draw();
@@ -82,7 +116,9 @@ fn main() {
 				_ => ()
 			}
 
-			if controller.update(& mut stage, & mut view, input) {
+			if controller.update(input) {
+				input.clear();
+				view.update(& mut stage, controller.get_model());
 				stage.draw();
 			}
 		}

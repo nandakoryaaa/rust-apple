@@ -1,58 +1,100 @@
-use crate::game::Stage;
-use crate::input::Input;
-use crate::input::InputEvent;
-use crate::view::MainView;
+use crate::game::{ Stage, PlayerAnimationState };
+use crate::input::{ Input, InputEvent };
+use crate::view::{ View, MainView };
+use crate::model::{ Model };
 
 pub trait Controller {
-	fn update(
-		& mut self, stage: & mut Stage,
-		view: & mut MainView, input: & dyn Input
-	) -> bool;
+	fn update(& mut self, input: & dyn Input) -> bool;
+
+	fn get_model(& self) -> & Model;
 }
 
 pub struct MainController {
-	pub player_x: i32,
-	pub player_w: u32
+	pub model: Model
 }
 
-impl Controller for MainController {
+pub struct MenuController {
+	pub model: Model
+}
+
+impl Controller for MenuController {
+	fn get_model(& self) -> & Model {
+		& self.model
+	}
+
 	fn update(
-		& mut self, stage: & mut Stage,
-		view: & mut MainView, input: & dyn Input
+		& mut self, input: & dyn Input
 	) -> bool {
 		let mut updated = false;
 		let evt: InputEvent = input.get_event();
-		match evt {
-			InputEvent::Empty => { },
-			_ => {
-				// Позволяет взять sw, так как player еще не используется.
-				let sw = stage.w as i32;
+		let mut m = & mut self.model;
+		match m {
+			Model::MenuModel { level, .. } => {
+				match evt {
+					InputEvent::ItemPrev => {
+						if *level > 0 {
+							*level -= 1;
+						}
+						updated = true;
+					}
+					InputEvent::ItemNext => {
+						if *level < 9 {
+							*level += 1;
+						}
+						updated = true;
+					}
+					InputEvent::ItemSelect => {
+						updated = true;
+					},
+					_ => ()
+				}
+			},
+			_ => ()
+		}
 
-				// get_child() возвращает & mut GameObject
-				// GameОbject находится в stage.obj_list, мы получаем лок на & mut GameObject,
-				// поэтому лок распространяется и на stage
-				// лок должен исчезнуть, когда исчезнет player
+		return updated;
+	}
+}
 
+impl Controller for MainController {
+	fn get_model(& self) -> & Model {
+		& self.model
+	}
+
+	fn update(
+		& mut self, input: & dyn Input
+	) -> bool {
+		let mut updated = true;
+		let evt: InputEvent = input.get_event();
+		let mut m = & mut self.model;
+		match m {
+			Model::MainModel { player_x, player_state, grid_w, .. } => {
 				match evt {
 					InputEvent::MoveLeft => {
-						if self.player_x > 0 {
-							self.player_x -= 1;
-							updated = true;
+						if *player_state as u32 != PlayerAnimationState::MoveLeft as u32 {
+							*player_state = PlayerAnimationState::MoveLeft;
+						}
+						if *player_x > 0 {
+							*player_x -= 1;
 						}
 					}
 					InputEvent::MoveRight => {
-						if self.player_x < sw - self.player_w as i32 {
-							self.player_x += 1;
-							updated = true;
+						if *player_state as u32 != PlayerAnimationState::MoveRight as u32 {
+							*player_state = PlayerAnimationState::MoveRight;
+						}
+						if *player_x < *grid_w as i32 {
+							*player_x += 1;
 						}
 					}
-					_ => ()
+					InputEvent::Stop => {
+						if *player_state as u32 != PlayerAnimationState::Stand as u32 {
+							*player_state = PlayerAnimationState::Stand;
+						}
+					},
+					_ => { updated = false; }
 				}
-			}
-		}
-		if updated {
-			let player = view.get_player(stage); //stage.get_child(0); //
-			//player.rect.x = self.player_x;
+			},
+			_ => { updated = false; }
 		}
 
 		return updated;

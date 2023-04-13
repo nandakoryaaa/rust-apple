@@ -1,45 +1,49 @@
 extern crate sdl2;
 use sdl2::pixels::Color;
-//use crate::game::GMO::GmoSpriteRLE;
-use crate::game::GMO;
-use crate::game::Stage;
-use crate::game::render::RendererFactory;
+use crate::game::{ GMO, Stage };
+use crate::factory::GmoFactory;
+use crate::model::Model;
 
 pub trait View {
-	//pub fn new(& mut self, & mut stage);
+	fn update(& self, stage: & mut Stage, model: & Model);
 }
 
 pub struct MainView {
-	//pub player: GameObject<'a>
-	//apple: GameObject,
+	pub factory: &'static GmoFactory
 }
 
 impl View for MainView {
+	fn update(& self, stage: & mut Stage, model: & Model) {
+		let plr = stage.get_child(0);
+		match plr {
+			GMO::GmoSpriteAnimated { x, state, frame, sequence, .. } => {
+				match *model {
+					Model::MainModel { player_state, player_x, .. } => {
+						*x = player_x;
+						if (*state) as u32 != player_state as u32 {
+							*state = player_state;
+							*sequence = self.factory.get_state(player_state);
+							*frame = 0;
+						}
+						plr.update();
+					},
+					_ => ()
+				}
+			},
+			_ => ()
+		}
+	}
 }
 
 impl MainView {
-	pub fn new(stage: & mut Stage, renderer_factory: &'static RendererFactory) -> Self {
+	pub fn new(stage: & mut Stage, gmo_factory: &'static GmoFactory) -> Self {
+		stage.add_child(gmo_factory.create_player());
 		stage.add_child(
-			GMO::newGmoSprite(
-				10, 10,
-				& renderer_factory.sprites.player_stand,
-				& renderer_factory.renderer_sprite_rle
-			)
-		);
-		stage.add_child(
-			GMO::newGmoText(
-				100, 200,
-				Color::RGB(0, 255, 0),
-				& "APPLE GAME",
-				& renderer_factory.renderer_text
-			)
+			gmo_factory.create_text(120, 440, Color::RGB(0, 255, 0), & "GMO APPLE")
 		);
 		Self {
-			//player: GameObject::new(0, 0, 10, 30, Color::RGB(255, 0, 0), & RendererRect {})
+			factory: gmo_factory
 		}
 	}
 
-	pub fn get_player<'a>(& self, stage: &'a mut Stage) -> &'a mut GMO {
-		return stage.get_child(0);
-	}
 }
