@@ -4,6 +4,11 @@ use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2::render::WindowCanvas;
 use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, Sprite, SpriteSequence };
+use crate::controller::{ Controller, ControllerMenu, ControllerMain };
+use crate::view::{ View, ViewMenu, ViewMain };
+//use crate::input::{ Input, InputMenu, InputMain };
+use crate::model::{ Model };
+use crate::factory::{ GmoFactory, MvcAbstractFactory };
 
 #[derive (Copy, Clone)]
 pub enum PlayerAnimationState {
@@ -13,6 +18,16 @@ pub enum PlayerAnimationState {
 	MoveLeft,
 	MoveRight,
 	Death
+}
+
+#[derive (Copy, Clone)]
+pub enum GameStateEvent {
+	Empty,
+	Run,
+	RunTitle,
+	RunMenu,
+	RunMain,
+	RunEnd
 }
 
 pub enum GMO {
@@ -56,6 +71,18 @@ pub enum GMO {
 	}
 }
 
+pub struct GameState {
+	pub state: GameStateEvent,
+}
+
+impl<'a> GameState {
+	pub fn new(evt: GameStateEvent) -> Self {
+		Self {
+			state: evt
+		}
+	}
+}
+
 impl GMO {
 	pub fn render(& self, stage: & Stage, canvas: & mut WindowCanvas) {
 		match self {
@@ -86,13 +113,13 @@ pub struct Stage {
 	pub grid_h: u32,
 	pub pixel_width: u32,
 	pub pixel_height: u32,
-	//pub canvas: WindowCanvas,
+	//pub canvas: &'a mut WindowCanvas,
 	obj_list: Vec<GMO>
 }
 
 impl Stage {
 	pub fn new(window_w: u32, window_h: u32, grid_w: u32, grid_h: u32
-		//, canvas: WindowCanvas
+		//, canvas: &'a mut WindowCanvas
 	) -> Self {
 		let mut p_w: u32 = window_w / grid_w;
 		let mut p_h: u32 = window_h / grid_h;
@@ -107,7 +134,7 @@ impl Stage {
 			grid_h: grid_h,
 			pixel_width: p_w,
 			pixel_height: p_h,
-	//		canvas: canvas,
+			//canvas: canvas,
 			obj_list: Vec::<GMO>::new()
 		}
 	}
@@ -117,10 +144,7 @@ impl Stage {
 		canvas.fill_rect(None);
 		
 		for i in 0..self.obj_list.len() {
-			//let o = & self.obj_list[i];
-			//o.render(self);
 			& self.obj_list[i].render(self, canvas);
-//			self.render(i);
 		}
 		canvas.present();
 	}
@@ -133,5 +157,9 @@ impl Stage {
 		let last_index: usize = self.obj_list.len();
 		self.obj_list.push(child);
 		last_index
+	}
+
+	pub fn clear(& mut self) {
+		self.obj_list.clear();
 	}
 }

@@ -1,49 +1,59 @@
-use crate::game::{ PlayerAnimationState };
+use crate::game::{ GameStateEvent, PlayerAnimationState };
 use crate::input::{ Input, InputEvent };
 use crate::model::{ Model };
 
 pub trait Controller {
-	fn update(& mut self, input: & dyn Input) -> bool;
+	fn update(& mut self, model: & mut Model, input: & dyn Input) -> GameStateEvent;
+}
 
-	fn get_model(& self) -> & Model;
+pub struct ControllerTitle {
 }
 
 pub struct ControllerMain {
-	pub model: Model
 }
 
 pub struct ControllerMenu {
-	pub model: Model
+}
+
+impl Controller for ControllerTitle {
+	fn update(
+		& mut self, model: & mut Model, input: & dyn Input
+	) -> GameStateEvent {
+		let evt: InputEvent = input.get_event();
+		match evt {
+			InputEvent::Continue => {
+				return GameStateEvent::RunMenu;
+			},
+			_ => ()
+		}
+
+		GameStateEvent::Empty
+	}
 }
 
 impl Controller for ControllerMenu {
-	fn get_model(& self) -> & Model {
-		& self.model
-	}
-
 	fn update(
-		& mut self, input: & dyn Input
-	) -> bool {
-		let mut updated = false;
+		& mut self, model: & mut Model, input: & dyn Input
+	) -> GameStateEvent {
+		let mut updated = GameStateEvent::Empty;
 		let evt: InputEvent = input.get_event();
-		let m = & mut self.model;
-		match m {
-			Model::MenuModel { level, .. } => {
+		match model {
+			Model::ModelMenu { level, .. } => {
 				match evt {
 					InputEvent::ItemPrev => {
 						if *level > 0 {
 							*level -= 1;
 						}
-						updated = true;
+						updated = GameStateEvent::Run;
 					}
 					InputEvent::ItemNext => {
 						if *level < 8 {
 							*level += 1;
 						}
-						updated = true;
+						updated = GameStateEvent::Run;
 					}
 					InputEvent::ItemSelect => {
-						updated = true;
+						updated = GameStateEvent::RunMain;
 					},
 					_ => ()
 				}
@@ -56,18 +66,13 @@ impl Controller for ControllerMenu {
 }
 
 impl Controller for ControllerMain {
-	fn get_model(& self) -> & Model {
-		& self.model
-	}
-
 	fn update(
-		& mut self, input: & dyn Input
-	) -> bool {
-		let mut updated = true;
+		& mut self, model: & mut Model, input: & dyn Input
+	) -> GameStateEvent {
+		let mut updated = GameStateEvent::Run;
 		let evt: InputEvent = input.get_event();
-		let m = & mut self.model;
-		match m {
-			Model::MainModel { player_x, player_state, grid_w, .. } => {
+		match model {
+			Model::ModelMain { player_x, player_state, grid_w, .. } => {
 				match evt {
 					InputEvent::MoveLeft => {
 						if *player_state as u32 != PlayerAnimationState::MoveLeft as u32 {
@@ -90,10 +95,10 @@ impl Controller for ControllerMain {
 							*player_state = PlayerAnimationState::Stand;
 						}
 					},
-					_ => { updated = false; }
+					_ => { updated = GameStateEvent::Empty; }
 				}
 			},
-			_ => { updated = false; }
+			_ => { updated = GameStateEvent::Empty; }
 		}
 
 		return updated;

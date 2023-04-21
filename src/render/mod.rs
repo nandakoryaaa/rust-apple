@@ -20,6 +20,7 @@ impl SpriteSequence {
 	pub fn get_w(& self, frame: usize) -> u32 {
 		self.frames[frame].w
 	}
+
 	pub fn get_h(& self, frame: usize) -> u32 {
 		self.frames[frame].h
 	}
@@ -35,13 +36,6 @@ impl RendererRect {
 	) {
 		canvas.set_draw_color(color);
 		canvas.fill_rect(rect);
-//			Rect::new(
-//				rect.x * (stage.pixel_width as i32),
-//				rect.y * (stage.pixel_height as i32),
-//			 	(rect.w * (stage.pixel_width as i32)) as u32,
-//				(rect.h * (stage.pixel_height as i32)) as u32 // WTF???
-//			)
-//		);
 	}
 }
 
@@ -127,22 +121,37 @@ impl RendererText {
 		canvas.set_draw_color(color);
 		let mut i = 0;
 		while i < s_len {
-			let c:u8 = bytes[i];
+			let c: u8 = bytes[i];
+			let idx: usize;
+			// dirty hacks
 			if c >= b'A' && c <= b'Z' {
-				let idx = ((c - b'A') * 7) as usize;
-				rect.y = y * ph as i32;
-				for byte_pos in 0..7 {
-					rect.x = (x + i as i32 * 8) * pw as i32;
-					let mut byte = self.font[idx + byte_pos];
-					while byte != 0 {
-						if byte & 1 != 0 {
-							canvas.fill_rect(rect);
-						}
-						byte >>= 1;
-						rect.x += pw as i32;
+				idx = (c - b'A') as usize;
+			} else if c >= b'0' && c <= b'9' {
+				idx = (c - b'0' + 30) as usize;
+			} else if c == b'-' {
+				idx = 26;
+			} else if c == b'+' {
+				idx = 27;
+			} else if c == b'!' {
+				idx = 28;
+			} else if c == b'?' {
+				idx = 29;
+			} else {
+				i += 1;
+				continue;
+			}
+			rect.y = y * ph as i32;
+			for byte_pos in 0..7 {
+				rect.x = (x + i as i32 * 8) * pw as i32;
+				let mut byte = self.font[idx * 7 + byte_pos];
+				while byte != 0 {
+					if byte & 1 != 0 {
+						canvas.fill_rect(rect);
 					}
-					rect.y += ph as i32;
+					byte >>= 1;
+					rect.x += pw as i32;
 				}
+				rect.y += ph as i32;
 			}
 			i += 1;
 		}

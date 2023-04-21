@@ -9,13 +9,37 @@ pub enum InputEvent {
 	Jump,
 	ItemPrev,
 	ItemNext,
-	ItemSelect
+	ItemSelect,
+	Continue
 }
 
 pub trait Input {
 	fn set_event(& mut self, k: Keycode) -> bool;
 	fn get_event(& self) -> InputEvent;
 	fn clear(& mut self);
+}
+
+pub struct InputTitle {
+	evt: InputEvent
+}
+
+impl Input for InputTitle {
+	fn set_event(& mut self, k: Keycode) -> bool {
+		if k == Keycode::Space || k == Keycode::Return {
+			self.evt = InputEvent::Continue;
+			return true;
+		}
+
+		false
+	}
+
+	fn clear(& mut self) {
+		self.evt = InputEvent::Empty;
+	}
+
+	fn get_event(& self) -> InputEvent {
+		self.evt
+	}
 }
 
 pub struct InputMain {
@@ -25,10 +49,18 @@ pub struct InputMain {
 }
 
 pub struct InputMenu {
-	evt: InputEvent,
+	pub evt: InputEvent,
 	item_prev: bool,
 	item_next: bool,
 	item_select: bool
+}
+
+impl InputTitle {
+	pub fn new() -> Self {
+		Self {
+			evt: InputEvent::Empty
+		}
+	}
 }
 
 impl InputMenu {
