@@ -10,19 +10,19 @@ pub mod render;
 extern crate sdl2;
 use sdl2::event::Event;
 
-use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, Sprite, SpriteSequence };
-use crate::factory::{ GmoFactory, MvcAbstractFactory, MvcFactoryMain };
-use crate::game::{ Stage, PlayerAnimationState, GameState, GameStateEvent };
+use crate::game::{ Stage, GameState, GameStateEvent };
 use crate::input::{ Input, InputTitle, InputMenu, InputMain };
 use crate::controller::{ Controller, ControllerTitle, ControllerMenu, ControllerMain };
 use crate::view::{ View, ViewTitle, ViewMenu, ViewMain };
-use crate::data::{ SPRITE_APPLE, PALETTE, FONT };
-use crate::data as cd; //::{ SPRITE_PLAYER_0,  SPRITE_PLAYER_2,  SPRITE_PLAYER_2,  SPRITE_PLAYER_3, SPRITE_PLAYER_4, SPRITE_PLAYER_5,;
 
-use crate::model::{ Model, ModelFactory };
+use crate::model::{ ModelFactory };
 use crate::factory::gmo_factory;
+use std::{thread, time};
+
+const FPS_DELAY:i32 = 33;
 
 fn main() {
+
 	let window_width:u32 = 1024;
 	let window_height:u32 = 768;
 
@@ -51,8 +51,6 @@ fn main() {
 	let mut input_title = InputTitle::new();
 	let mut input_menu = InputMenu::new();
 	let mut input_main = InputMain::new();
-	//let mut model_menu = ModelFactory::ModelMenu();
-	//let mut model_main = ModelFactory::ModelMain();
 
 	let mut controller: & mut dyn Controller = & mut controller_title;
 	let mut view: & mut dyn View = & mut view_title;
@@ -63,11 +61,14 @@ fn main() {
 	stage.draw(& mut canvas);
 
 	let mut evt_pump = sdl.event_pump().unwrap();
+	let timer = sdl.timer().unwrap();
 	let mut running = true;
+
+	let mut next_tick:i32 = timer.ticks() as i32 + FPS_DELAY;
 
 	while running {
 		let evt_option = evt_pump.poll_event();
-		if evt_option != None { 
+		if evt_option != None {
 			let evt = evt_option.unwrap();
 			match evt {
 				Event::Quit { .. } => {
@@ -109,5 +110,11 @@ fn main() {
 				_ => ()
 			}
 		}
+		let mut diff:i32 = next_tick - timer.ticks() as i32;
+		while diff > 0 {
+			thread::sleep(time::Duration::from_millis(diff as u64));
+			diff = next_tick - timer.ticks() as i32;
+		}
+		next_tick += FPS_DELAY;
 	}
 }

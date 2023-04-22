@@ -1,11 +1,9 @@
 use sdl2::pixels::Color;
+use sdl2::rect::Rect;
 use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, Sprite, SpriteSequence };
-use crate::game::{ Stage, GMO, PlayerAnimationState };
+use crate::game::{ GMO, PlayerAnimationState };
 use crate::data::{ SPRITE_APPLE, PALETTE, FONT };
-use crate::data as cd; //::{ SPRITE_PLAYER_0,  SPRITE_PLAYER_2,  SPRITE_PLAYER_2,  SPRITE_PLAYER_3, SPRITE_PLAYER_4, SPRITE_PLAYER_5,;
-use crate::input::{ Input, InputMain };
-use crate::controller::{ Controller, ControllerMain };
-use crate::view::{ View, ViewMain };
+use crate::data as cd;
 
 pub struct GmoFactory {
 	pub sp_apple: Sprite,
@@ -57,9 +55,23 @@ impl GmoFactory {
 		}
 	}
 
+	pub fn create_rect(&'static self, x: i32, y: i32, w: u32, h: u32, color: Color, pixel_width: u32, pixel_height: u32) -> GMO {
+		GMO::GmoRect {
+			x: x,
+			y: y,
+			w: w,
+			h: h,
+			color: color,
+			rect: Rect::new(x * pixel_width as i32, y * pixel_height as i32, pixel_width * w, pixel_height * h),
+			renderer: & self.renderer_rect
+		}
+	}
+
 	pub fn get_state(&'static self, state: PlayerAnimationState) -> & SpriteSequence {
 		match state {
+			PlayerAnimationState::StandLeft => { & self.sq_player_stand_l },
 			PlayerAnimationState::MoveLeft => { & self.sq_player_move_l },
+			PlayerAnimationState::StandRight => { & self.sq_player_stand_r },
 			PlayerAnimationState::MoveRight => { & self.sq_player_move_r },
 			_ => { & self.sq_player_stand }
 		}
@@ -103,13 +115,3 @@ pub static gmo_factory: GmoFactory = GmoFactory {
 		pixel_height: 1
 	}, 
 };
-
-pub struct MvcFactoryMain {
-	pub controller: ControllerMain,
-	pub view: ViewMain,
-	pub input: InputMain
-}
-
-pub struct MvcAbstractFactory {
-	pub factory_main: MvcFactoryMain
-}

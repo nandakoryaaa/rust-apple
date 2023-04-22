@@ -23,8 +23,8 @@ impl ModelFactory {
 		Model::ModelMain {
 			grid_w: 256,
 			grid_h: 256,
-			player_x: 112,
-			player_y: 200,
+			player_x: 1,
+			player_y: 187,
 			player_state: PlayerAnimationState::Stand,
 			player_frame: 0,
 			apple_x: 0,

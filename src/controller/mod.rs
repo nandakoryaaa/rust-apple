@@ -91,8 +91,10 @@ impl Controller for ControllerMain {
 						}
 					}
 					InputEvent::Stop => {
-						if *player_state as u32 != PlayerAnimationState::Stand as u32 {
-							*player_state = PlayerAnimationState::Stand;
+						if *player_state as u32 == PlayerAnimationState::MoveLeft as u32 {
+							*player_state = PlayerAnimationState::StandLeft;
+						} else if *player_state as u32 == PlayerAnimationState::MoveRight as u32 {
+							*player_state = PlayerAnimationState::StandRight;
 						}
 					},
 					_ => { updated = GameStateEvent::Empty; }

@@ -123,7 +123,7 @@ impl RendererText {
 		while i < s_len {
 			let c: u8 = bytes[i];
 			let idx: usize;
-			// dirty hacks
+			// dirty hacks, needs lookup table
 			if c >= b'A' && c <= b'Z' {
 				idx = (c - b'A') as usize;
 			} else if c >= b'0' && c <= b'9' {

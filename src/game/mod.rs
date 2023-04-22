@@ -4,11 +4,6 @@ use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2::render::WindowCanvas;
 use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, Sprite, SpriteSequence };
-use crate::controller::{ Controller, ControllerMenu, ControllerMain };
-use crate::view::{ View, ViewMenu, ViewMain };
-//use crate::input::{ Input, InputMenu, InputMain };
-use crate::model::{ Model };
-use crate::factory::{ GmoFactory, MvcAbstractFactory };
 
 #[derive (Copy, Clone)]
 pub enum PlayerAnimationState {
@@ -109,8 +104,8 @@ impl GMO {
 }
 
 pub struct Stage {
-	pub grid_w: u32,
-	pub grid_h: u32,
+	pub w: u32,
+	pub h: u32,
 	pub pixel_width: u32,
 	pub pixel_height: u32,
 	//pub canvas: &'a mut WindowCanvas,
@@ -118,11 +113,11 @@ pub struct Stage {
 }
 
 impl Stage {
-	pub fn new(window_w: u32, window_h: u32, grid_w: u32, grid_h: u32
+	pub fn new(window_w: u32, window_h: u32, w: u32, h: u32
 		//, canvas: &'a mut WindowCanvas
 	) -> Self {
-		let mut p_w: u32 = window_w / grid_w;
-		let mut p_h: u32 = window_h / grid_h;
+		let mut p_w: u32 = window_w / w;
+		let mut p_h: u32 = window_h / h;
 		if p_w < 1 {
 			p_w = 1;
 		}
@@ -130,8 +125,8 @@ impl Stage {
 			p_h = 1;
 		}
 		Self {
-			grid_w: grid_w,
-			grid_h: grid_h,
+			w: w,
+			h: h,
 			pixel_width: p_w,
 			pixel_height: p_h,
 			//canvas: canvas,
