@@ -1,6 +1,6 @@
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, Sprite, SpriteSequence };
+use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, RendererNumber, RendererFont, Sprite, SpriteSequence };
 use crate::game::{ GMO, PlayerAnimationState };
 use crate::data::{ SPRITE_APPLE, PALETTE, FONT };
 use crate::data as cd;
@@ -17,6 +17,7 @@ pub struct GmoFactory {
 	pub renderer_rect: RendererRect,
 	pub renderer_sprite_rle: RendererSpriteRLE,
 	pub renderer_text: RendererText,
+	pub renderer_number: RendererNumber,
 }
 
 impl GmoFactory {
@@ -28,7 +29,7 @@ impl GmoFactory {
 			h: 0,
 			state: PlayerAnimationState::Stand,
 			frame: 0,
-			delay: 0,
+			looped: true,
 			sequence: & self.sq_player_stand,
 			renderer: & self.renderer_sprite_rle
 		}
@@ -41,6 +42,17 @@ impl GmoFactory {
 			color: color,
 			text: text,
 			renderer: & self.renderer_text
+		}
+	}
+
+	pub fn create_number(&'static self, x: i32, y: i32, color: Color, number: i32, padding: i32) -> GMO {
+		GMO::GmoNumber {
+			x: x,
+			y: y,
+			color: color,
+			number: number,
+			padding: padding,
+			renderer: & self.renderer_number
 		}
 	}
 
@@ -73,13 +85,13 @@ impl GmoFactory {
 			PlayerAnimationState::MoveLeft => { & self.sq_player_move_l },
 			PlayerAnimationState::StandRight => { & self.sq_player_stand_r },
 			PlayerAnimationState::MoveRight => { & self.sq_player_move_r },
+			PlayerAnimationState::Death => { & self.sq_player_death },
 			_ => { & self.sq_player_stand }
 		}
 	}
-
 }
 
-pub static gmo_factory: GmoFactory = GmoFactory {
+pub static GMO_FACTORY: GmoFactory = GmoFactory {
 	sp_apple: Sprite { w: 8, h: 10, data: & SPRITE_APPLE },
 	sq_player_stand: SpriteSequence { frame_cnt: 1, frames: & [& Sprite { w: 22, h: 30, data: & cd::SPRITE_PLAYER_0 }] },
 	sq_player_stand_l: SpriteSequence { frame_cnt: 1, frames: & [& Sprite { w: 32, h: 30, data: & cd::SPRITE_PLAYER_L_0 }] },
@@ -93,10 +105,11 @@ pub static gmo_factory: GmoFactory = GmoFactory {
 		frames: & [& Sprite { w: 32, h: 30, data: & cd::SPRITE_PLAYER_R_1 }, & Sprite { w: 32, h: 30, data: & cd::SPRITE_PLAYER_R_2 }]
 	},
 	sq_player_death: SpriteSequence {
-		frame_cnt: 2,
+		frame_cnt: 7,
 		frames: & [
+			& Sprite { w: 22, h: 30, data: & cd::SPRITE_PLAYER_0 },
 			& Sprite { w: 22, h: 30, data: & cd::SPRITE_PLAYER_1 },
-			& Sprite { w: 22, h: 30, data: & cd::SPRITE_PLAYER_2 },
+			& Sprite { w: 23, h: 30, data: & cd::SPRITE_PLAYER_2 },
 			& Sprite { w: 23, h: 30, data: & cd::SPRITE_PLAYER_3 },
 			& Sprite { w: 23, h: 30, data: & cd::SPRITE_PLAYER_4 },
 			& Sprite { w: 24, h: 30, data: & cd::SPRITE_PLAYER_5 },
@@ -104,14 +117,23 @@ pub static gmo_factory: GmoFactory = GmoFactory {
 		]
 	},
 	renderer_rect: RendererRect {},
-	renderer_text: RendererText {
-		pixel_width: 1,
-		pixel_height: 1,
-		font: & FONT
-	},
 	renderer_sprite_rle: RendererSpriteRLE {
 		palette: & PALETTE,
 		pixel_width: 1,
 		pixel_height: 1
 	}, 
+	renderer_text: RendererText {
+		renderer: RendererFont {
+			pixel_width: 1,
+			pixel_height: 1,
+			font: & FONT
+		}
+	},
+	renderer_number: RendererNumber {
+		renderer: RendererFont {
+			pixel_width: 1,
+			pixel_height: 1,
+			font: & FONT
+		}
+	}
 };

@@ -9,6 +9,7 @@ use crate::model::Model;
 pub trait View {
 	fn init(& mut self, stage: & mut Stage, model: & Model);
 	fn update(& self, stage: & mut Stage, model: & Model);
+	fn clear(& mut self, stage: & mut Stage);
 }
 
 pub struct ViewTitle {
@@ -23,8 +24,21 @@ pub struct ViewMenu {
 
 pub struct ViewMain {
 	pub factory: &'static GmoFactory,
-	player_id: usize
+	player_id: usize,
+	apple_id: usize,
+	num_collected_id: usize,
+	num_lost_id: usize,
+	grid_step_x: i32,
+	grid_step_y: i32,
 }
+
+pub struct ViewGameOver {
+	pub factory: &'static GmoFactory,
+	player_id: usize,
+	grid_step_x: i32,
+	grid_step_y: i32,
+}
+
 
 impl ViewTitle {
 	pub fn new(gmo_factory: &'static GmoFactory) -> Self {
@@ -48,7 +62,33 @@ impl ViewMain {
 	pub fn new(gmo_factory: &'static GmoFactory) -> Self {
 		Self {
 			factory: gmo_factory,
-			player_id: 0
+			player_id: 0,
+			apple_id: 0,
+			num_collected_id: 0,
+			num_lost_id: 0,
+			grid_step_x: 8,
+			grid_step_y: 6
+		}
+	}
+
+	fn update_gmo_number(& self, stage: & mut Stage, idx: usize, num: i32) {
+		let gmo = stage.get_child(idx);
+		match gmo {
+			GMO::GmoNumber { number, .. } => {
+				*number = num;
+			},
+			_ => ()
+		}
+	}
+}
+
+impl ViewGameOver {
+	pub fn new(gmo_factory: &'static GmoFactory) -> Self {
+		Self {
+			factory: gmo_factory,
+			player_id: 0,
+			grid_step_x: 8,
+			grid_step_y: 6
 		}
 	}
 }
@@ -56,7 +96,8 @@ impl ViewMain {
 impl View for ViewTitle {
 	fn init(& mut self, stage: & mut Stage, model: & Model) {
 		match *model {
-			Model::ModelTitle { logo_w, logo_h, logo_pattern } => {
+			Model::ModelTitle { logo_w, logo_pattern, .. } => {
+				stage.clear();
 				let l = logo_pattern.len();
 				let mut y:u32 = 0;
 				let mut x:u32 = 0;
@@ -87,12 +128,17 @@ impl View for ViewTitle {
 		}
 	}
 
-	fn update(& self, stage: & mut Stage, model: & Model) {
+	fn update(& self, _stage: & mut Stage, _model: & Model) {
+	}
+
+	fn clear(& mut self, stage: & mut Stage) {
+		stage.clear();
 	}
 }
 
 impl View for ViewMenu {
 	fn init(& mut self, stage: & mut Stage, model: & Model) {
+		stage.clear();
 		stage.add_child(
 			self.factory.create_text(60, 100, Color::RGB(0, 255, 0), & "SELECT DIFFICULTY")
 		);
@@ -111,6 +157,7 @@ impl View for ViewMenu {
 
 		self.item_id = stage.add_child(self.factory.create_apple(sel_x, 138));
 		self.selector_x = sel_x;
+		self.update(stage, model)
 	}
 
 	fn update(& self, stage: & mut Stage, model: & Model) {
@@ -127,32 +174,100 @@ impl View for ViewMenu {
 			_ => ()
 		}
 	}
+
+	fn clear(& mut self, stage: & mut Stage) {
+		stage.clear();
+	}
 }
 
 impl View for ViewMain {
 	fn init(& mut self, stage: & mut Stage, model: & Model) {
 		match model {
-			Model::ModelMain { player_x, player_y, .. } => {
+			Model::ModelMain { data } => {
 				self.player_id = stage.add_child(
 					GMO::GmoSpriteAnimated {
-						x: *player_x,
-						y: *player_y,
+						x: data.player_x * self.grid_step_x,
+						y: data.grid_h as i32 * self.grid_step_y + 7,
 						w: 24,
 						h: 32,
 						state: PlayerAnimationState::Stand,
+						looped: true,
 						frame: 0,
-						delay: 6,
 						sequence: & self.factory.sq_player_stand,
 						renderer: & self.factory.renderer_sprite_rle
 					}
 				);
 				for i in 0..28 {
-					stage.add_child(self.factory.create_apple((16 + i * 8) as i32, 16));
+					stage.add_child(self.factory.create_apple((16 + i * self.grid_step_x) as i32, 16));
 				}
 				stage.add_child(self.factory.create_rect(0, 217, stage.w, 1, Color::RGB(0, 255, 0), stage.pixel_width, stage.pixel_height));
 				stage.add_child(self.factory.create_text(8, 233, Color::RGB(0, 255, 0), & "APPLES"));
-				stage.add_child(self.factory.create_text(96, 233, Color::RGB(0, 255, 0), & "STRIKE!"));
+				self.num_collected_id = stage.add_child(self.factory.create_number(64, 233, Color::RGB(0, 255, 0), 0, 3));
+				//stage.add_child(self.factory.create_text(96, 233, Color::RGB(0, 255, 0), & "STRIKE!"));
 				stage.add_child(self.factory.create_text(160, 233, Color::RGB(0, 255, 0), & "DROPPED"));
+				self.num_lost_id = stage.add_child(self.factory.create_number(224, 233, Color::RGB(0, 255, 0), 0, 3));
+				self.apple_id = stage.add_child(self.factory.create_apple(16, 16));
+			},
+			_ => ()
+		}
+	}
+
+	fn update(& self, stage: & mut Stage, model: & Model) {
+		match model {
+			Model::ModelMain { data } => {
+				self.update_gmo_number(stage, self.num_collected_id, data.apples_collected as i32);
+				self.update_gmo_number(stage, self.num_lost_id, data.apples_lost as i32);
+				let plr = stage.get_child(self.player_id);
+				match plr {
+					GMO::GmoSpriteAnimated { x, state, frame, sequence, .. } => {
+						*x = data.player_x * self.grid_step_x;
+						if *state as u32 != data.player_state as u32 {
+							*state = data.player_state;
+							*sequence = self.factory.get_state(data.player_state);
+							*frame = 0;
+						}
+						plr.update();
+					},
+					_ => ()
+				}
+
+				let apple = stage.get_child(self.apple_id);
+				match apple {
+					GMO::GmoSprite { x, y, .. } => {
+						*x = data.apple_x * self.grid_step_x;
+						*y = 26 + data.apple_y * self.grid_step_y;
+					},
+					_ => ()
+					
+				}
+			},
+			_ => ()
+		}
+	}
+
+	fn clear(& mut self, stage: & mut Stage) {
+		stage.remove_child(self.apple_id);
+		stage.remove_child(self.player_id);
+	}
+}
+
+impl View for ViewGameOver {
+	fn init(& mut self, stage: & mut Stage, model: & Model) {
+		match model {
+			Model::ModelMain { data } => {
+				self.player_id = stage.add_child(
+					GMO::GmoSpriteAnimated {
+						x: data.player_x * self.grid_step_x,
+						y: data.grid_h as i32 * self.grid_step_y + 7,
+						w: 24,
+						h: 32,
+						state: PlayerAnimationState::Death,
+						looped: false,
+						frame: 0,
+						sequence: & self.factory.sq_player_death,
+						renderer: & self.factory.renderer_sprite_rle
+					}
+				);
 			},
 			_ => ()
 		}
@@ -161,21 +276,14 @@ impl View for ViewMain {
 	fn update(& self, stage: & mut Stage, model: & Model) {
 		let plr = stage.get_child(self.player_id);
 		match plr {
-			GMO::GmoSpriteAnimated { x, state, frame, sequence, .. } => {
-				match *model {
-					Model::ModelMain { player_state, player_x, .. } => {
-						*x = player_x * 8;
-						if (*state) as u32 != player_state as u32 {
-							*state = player_state;
-							*sequence = self.factory.get_state(player_state);
-							*frame = 0;
-						}
-						plr.update();
-					},
-					_ => ()
-				}
+			GMO::GmoSpriteAnimated { .. } => {
+				plr.update();
 			},
 			_ => ()
 		}
+	}
+
+	fn clear(& mut self, stage: & mut Stage) {
+		stage.clear();
 	}
 }

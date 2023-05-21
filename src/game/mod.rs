@@ -3,7 +3,7 @@ extern crate sdl2;
 use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2::render::WindowCanvas;
-use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, Sprite, SpriteSequence };
+use crate::render::{ RendererRect, RendererSpriteRLE, RendererText, RendererNumber, Sprite, SpriteSequence };
 
 #[derive (Copy, Clone)]
 pub enum PlayerAnimationState {
@@ -22,7 +22,7 @@ pub enum GameStateEvent {
 	RunTitle,
 	RunMenu,
 	RunMain,
-	RunEnd
+	RunGameOver
 }
 
 pub enum GMO {
@@ -51,8 +51,8 @@ pub enum GMO {
 		w: u32,
 		h: u32,
 		state: PlayerAnimationState,
+		looped: bool,
 		frame: usize,
-		delay: u32,
 		sequence: &'static SpriteSequence,
 		renderer: &'static RendererSpriteRLE
 	},
@@ -63,18 +63,15 @@ pub enum GMO {
 		color: Color,
 		text: &'static str,
 		renderer: &'static RendererText
-	}
-}
+	},
 
-pub struct GameState {
-	pub state: GameStateEvent,
-}
-
-impl<'a> GameState {
-	pub fn new(evt: GameStateEvent) -> Self {
-		Self {
-			state: evt
-		}
+	GmoNumber {
+		x: i32,
+		y: i32,
+		color: Color,
+		number: i32,
+		padding: i32,
+		renderer: &'static RendererNumber
 	}
 }
 
@@ -85,13 +82,17 @@ impl GMO {
 			GMO::GmoSprite { renderer, sprite, x, y, .. } => { renderer.render(stage, canvas, *x, *y, sprite); },
 			GMO::GmoSpriteAnimated { renderer, sequence, frame, x, y, .. } => { renderer.render(stage, canvas, *x, *y, (*sequence).frames[*frame]); },
 			GMO::GmoText { renderer, color, x, y, text, .. } => { renderer.render(stage, canvas, *x, *y, *color, text); }
+			GMO::GmoNumber { renderer, color, x, y, number, padding, .. } => { renderer.render(stage, canvas, *x, *y, *color, *number, *padding); }
 		}
 	}
 
 	pub fn update(& mut self) {
 		match self {
-			GMO::GmoSpriteAnimated { frame, sequence, .. } => {
+			GMO::GmoSpriteAnimated { frame, sequence, looped, .. } => {
 				let mut f:usize = *frame;
+				if !*looped && f == sequence.frame_cnt - 1 {
+					return;
+				}
 				f += 1;
 				if f == sequence.frame_cnt {
 					f = 0;
@@ -108,14 +109,11 @@ pub struct Stage {
 	pub h: u32,
 	pub pixel_width: u32,
 	pub pixel_height: u32,
-	//pub canvas: &'a mut WindowCanvas,
 	obj_list: Vec<GMO>
 }
 
 impl Stage {
-	pub fn new(window_w: u32, window_h: u32, w: u32, h: u32
-		//, canvas: &'a mut WindowCanvas
-	) -> Self {
+	pub fn new(window_w: u32, window_h: u32, w: u32, h: u32) -> Self {
 		let mut p_w: u32 = window_w / w;
 		let mut p_h: u32 = window_h / h;
 		if p_w < 1 {
@@ -129,7 +127,6 @@ impl Stage {
 			h: h,
 			pixel_width: p_w,
 			pixel_height: p_h,
-			//canvas: canvas,
 			obj_list: Vec::<GMO>::new()
 		}
 	}
@@ -139,7 +136,7 @@ impl Stage {
 		canvas.fill_rect(None);
 		
 		for i in 0..self.obj_list.len() {
-			& self.obj_list[i].render(self, canvas);
+			self.obj_list[i].render(self, canvas);
 		}
 		canvas.present();
 	}
@@ -152,6 +149,10 @@ impl Stage {
 		let last_index: usize = self.obj_list.len();
 		self.obj_list.push(child);
 		last_index
+	}
+
+	pub fn remove_child(& mut self, idx: usize) {
+		self.obj_list.remove(idx);
 	}
 
 	pub fn clear(& mut self) {

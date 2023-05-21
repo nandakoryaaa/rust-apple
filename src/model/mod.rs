@@ -1,37 +1,30 @@
 use crate::game::PlayerAnimationState;
 use crate::data::TITLE;
 
-pub struct ModelFactory {
+pub trait ModelTransfer {
+	fn transfer(& mut self, from: & Model);
 }
 
-impl ModelFactory {
-	pub fn ModelTitle() -> Model {
-		Model::ModelTitle {
-			logo_w: 29,
-			logo_h: 15,
-			logo_pattern: & TITLE
-		}
-	}
+pub struct ModelDataMain {
+	pub level: i32,
+	pub grid_w: u32,
+	pub grid_h: u32,
+	pub player_x: i32,
+	pub player_state: PlayerAnimationState,
+	pub apple_x: i32,
+	pub apple_y: i32,
+	pub apples_collected: u32,
+	pub apples_left: u32,
+	pub apples_lost: u32
+}
 
-	pub fn ModelMenu() -> Model {
-		Model::ModelMenu {
-			level: 0
-		}
-	}
-
-	pub fn ModelMain() -> Model {
-		Model::ModelMain {
-			grid_w: 256,
-			grid_h: 256,
-			player_x: 1,
-			player_y: 187,
-			player_state: PlayerAnimationState::Stand,
-			player_frame: 0,
-			apple_x: 0,
-			apple_y: 0,
-			apples_collected: 0,
-			apples_left: 0,
-			apples_lost: 0
+impl ModelTransfer for ModelDataMain {
+	fn transfer(& mut self, from: & Model) {
+		match *from {
+			Model::ModelMenu { level } => {
+				self.level = level;
+			},
+			_ => ()
 		}
 	}
 }
@@ -39,25 +32,53 @@ impl ModelFactory {
 pub enum Model {
 	ModelTitle {
 		logo_w: u32,
-		logo_h: u32,
 		logo_pattern: &'static [u8]
 	},
 
 	ModelMenu {
-		level: u32
+		level: i32
 	},
 
 	ModelMain {
-		grid_w: u32,
-		grid_h: u32,
-		player_x: i32,
-		player_y: i32,
-		player_state: PlayerAnimationState,
-		player_frame: u32,
-		apple_x: i32,
-		apple_y: i32,
-		apples_collected: u32,
-		apples_left: u32,
-		apples_lost: u32
+		data: ModelDataMain,
+	}
+}
+
+pub struct ModelFactory {
+}
+
+impl ModelFactory {
+	pub fn model_title() -> Model {
+		Model::ModelTitle {
+			logo_w: 29,
+			logo_pattern: & TITLE
+		}
+	}
+
+	pub fn model_menu() -> Model {
+		Model::ModelMenu {
+			level: 4
+		}
+	}
+
+	pub fn model_main(from_model: & Model) -> Model {
+		let mut data = ModelDataMain {
+			level: 0,
+			grid_w: 32,
+			grid_h: 30,
+			player_x: 16,
+			player_state: PlayerAnimationState::Stand,
+			apple_x: 0,
+			apple_y: 0,
+			apples_collected: 0,
+			apples_left: 100,
+			apples_lost: 0
+		};
+
+		data.transfer(from_model);
+
+		Model::ModelMain {
+			data: data
+		}
 	}
 }

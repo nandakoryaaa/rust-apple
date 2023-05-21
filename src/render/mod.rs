@@ -30,7 +30,7 @@ pub struct RendererRect {}
 
 impl RendererRect {
 	pub fn render(
-		& self, stage: & Stage, canvas: & mut WindowCanvas,
+		& self, _stage: & Stage, canvas: & mut WindowCanvas,
 		color: Color,
 		rect: Rect
 	) {
@@ -105,24 +105,80 @@ pub struct RendererSpriteAnimation {
 	pub renderer: &'static RendererSpriteRLE
 }
 
-pub struct RendererText {
+pub struct RendererFont {
 	pub pixel_width: u32,
 	pub pixel_height: u32,
 	pub font: &'static [u8]
 }
 
+impl RendererFont {
+	pub fn render(& self, stage: & Stage, canvas: & mut WindowCanvas, x:i32, y:i32, idx:usize) {
+		let pw: u32 = stage.pixel_width;
+		let ph: u32 = stage.pixel_height;
+		let mut rect: Rect = Rect::new(x, y, pw, ph);
+
+		rect.y = y * ph as i32;
+		for byte_pos in 0..7 {
+			rect.x = x * pw as i32;
+			let mut byte = self.font[idx * 7 + byte_pos];
+			while byte != 0 {
+				if byte & 1 != 0 {
+					canvas.fill_rect(rect);
+				}
+				byte >>= 1;
+				rect.x += pw as i32;
+			}
+			rect.y += ph as i32;
+		}
+	}
+}
+
+pub struct RendererNumber {
+	pub renderer: RendererFont
+}
+
+impl RendererNumber {
+	pub fn render(& self, stage: & Stage, canvas: & mut WindowCanvas, mut x: i32, y: i32, color: Color, mut number: i32, mut padding: i32) {
+		canvas.set_draw_color(color);
+		let mut buffer: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+		let mut pos: usize = 7;
+
+		loop {
+			buffer[pos] = (number % 10) as u8;
+			padding -= 1;
+			number /= 10;
+			if number == 0 {
+				break;
+			}
+			pos -= 1;
+		}
+
+		if padding > 0 {
+			pos -= padding as usize;
+		}
+
+		while pos < 8 {
+			self.renderer.render(stage, canvas, x, y, 30 + buffer[pos] as usize);
+			x += 8;
+			pos += 1;
+		}
+	}
+}
+
+pub struct RendererText {
+	pub renderer: RendererFont
+}
+
 impl RendererText {
-	pub fn render(& self, stage: & Stage, canvas: & mut WindowCanvas, x:i32, y:i32, color: Color, s: & str) {
+	pub fn render(& self, stage: & Stage, canvas: & mut WindowCanvas, mut x: i32, y: i32, color: Color, s: & str) {
 		let bytes = s.as_bytes();
 		let s_len = bytes.len();
-		let pw = stage.pixel_width;
-		let ph = stage.pixel_height;
-		let mut rect: Rect = Rect::new(x, y, pw, ph);
 		canvas.set_draw_color(color);
+		let mut idx: usize = 0;
 		let mut i = 0;
 		while i < s_len {
 			let c: u8 = bytes[i];
-			let idx: usize;
+			i += 1;
 			// dirty hacks, needs lookup table
 			if c >= b'A' && c <= b'Z' {
 				idx = (c - b'A') as usize;
@@ -137,23 +193,12 @@ impl RendererText {
 			} else if c == b'?' {
 				idx = 29;
 			} else {
-				i += 1;
+				x += 8;
 				continue;
 			}
-			rect.y = y * ph as i32;
-			for byte_pos in 0..7 {
-				rect.x = (x + i as i32 * 8) * pw as i32;
-				let mut byte = self.font[idx * 7 + byte_pos];
-				while byte != 0 {
-					if byte & 1 != 0 {
-						canvas.fill_rect(rect);
-					}
-					byte >>= 1;
-					rect.x += pw as i32;
-				}
-				rect.y += ph as i32;
-			}
-			i += 1;
+
+			self.renderer.render(stage, canvas, x, y, idx);
+			x += 8;
 		}
 	}
 }
