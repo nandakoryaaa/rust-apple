@@ -19,7 +19,7 @@ pub trait Input {
 	fn clear(& mut self);
 }
 
-pub struct InputTitle {
+pub struct InputAnyKey {
 	evt: InputEvent
 }
 
@@ -31,11 +31,7 @@ pub struct InputMain {
 	evt: InputEvent
 }
 
-pub struct InputGameOver {
-	evt: InputEvent
-}
-
-impl InputTitle {
+impl InputAnyKey {
 	pub fn new() -> Self {
 		Self {
 			evt: InputEvent::Empty
@@ -59,22 +55,10 @@ impl InputMain {
 	}
 }
 
-impl InputGameOver {
-	pub fn new() -> Self {
-		Self {
-			evt: InputEvent::Empty,
-		}
-	}
-}
-
-impl Input for InputTitle {
+impl Input for InputAnyKey {
 	fn set_event(& mut self, k: Keycode) -> bool {
-		if k == Keycode::Space || k == Keycode::Return {
-			self.evt = InputEvent::Continue;
-			return true;
-		}
-
-		false
+		self.evt = InputEvent::Continue;
+		true
 	}
 
 	fn clear(& mut self) {
@@ -127,18 +111,6 @@ impl Input for InputMain {
 	fn clear(& mut self) {
 		self.evt = InputEvent::Empty;
 	}
-
-	fn get_event(& self) -> InputEvent {
-		self.evt
-	}
-}
-
-impl Input for InputGameOver {
-	fn set_event(& mut self, k: Keycode) -> bool {
-		false
-	}
-
-	fn clear(& mut self) { }
 
 	fn get_event(& self) -> InputEvent {
 		self.evt

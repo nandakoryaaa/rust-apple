@@ -14,7 +14,7 @@ use sdl2::event::Event;
 use std::{thread, time};
 
 use crate::game::{ Stage, GameStateEvent };
-use crate::input::{ Input, InputTitle, InputMenu, InputMain, InputGameOver };
+use crate::input::{ Input, InputAnyKey, InputMenu, InputMain };
 use crate::controller::{ PlayerAppleCollider, Controller, ControllerTitle, ControllerMenu, ControllerMain, ControllerGameOver };
 use crate::view::{ View, ViewTitle, ViewMenu, ViewMain, ViewGameOver };
 
@@ -45,22 +45,21 @@ fn main() {
 
 	let mut controller_title = ControllerTitle { evt: GameStateEvent::Empty };
 	let mut controller_menu = ControllerMenu { evt: GameStateEvent::Empty };
-	let mut controller_main = ControllerMain { evt: GameStateEvent::Empty, rand: XRand::new(), tick: 0, player_dir: 0, player_step: 0, collider: PlayerAppleCollider {} };
-	let mut controller_game_over = ControllerGameOver { phase: 0, tick: 0 };
+	let mut controller_main = ControllerMain { evt: GameStateEvent::Empty, rand: XRand::new(), tick: 0, player_dir: 0, need_new_apple: true, player_step: 0, collider: PlayerAppleCollider {} };
+	let mut controller_game_over = ControllerGameOver { evt: GameStateEvent::Empty, phase: 60, tick: 0 };
 
 	let mut view_title = ViewTitle::new(& GMO_FACTORY);
 	let mut view_menu = ViewMenu::new(& GMO_FACTORY);
 	let mut view_main = ViewMain::new(& GMO_FACTORY);
 	let mut view_game_over = ViewGameOver::new(& GMO_FACTORY);
 
-	let mut input_title = InputTitle::new();
+	let mut input_any_key = InputAnyKey::new();
 	let mut input_menu = InputMenu::new();
 	let mut input_main = InputMain::new();
-	let mut input_game_over = InputGameOver::new();
 
 	let mut controller: & mut dyn Controller = & mut controller_title;
 	let mut view: & mut dyn View = & mut view_title;
-	let mut input: & mut dyn Input = & mut input_title;
+	let mut input: & mut dyn Input = & mut input_any_key;
 	let mut model = ModelFactory::model_title();
 
 	view.init(& mut stage, & model);
@@ -99,30 +98,48 @@ fn main() {
 				stage.draw(& mut canvas);
 			},
 			GameStateEvent::RunMenu => {
-				view.clear(& mut stage);
-				input.clear();
-				controller = & mut controller_menu;
-				view = & mut view_menu;
 				input = & mut input_menu;
+				input.clear();
 				model = ModelFactory::model_menu();
+				controller = & mut controller_menu;
+				controller.reset();
+				view.clear(& mut stage);
+				view = & mut view_menu;
 				view.init(& mut stage, & model);
 				stage.draw(& mut canvas);
 			},
 			GameStateEvent::RunMain => {
-				view.clear(& mut stage);
-				input.clear();
-				controller = & mut controller_main;
-				view = & mut view_main;
 				input = & mut input_main;
+				input.clear();
 				model = ModelFactory::model_main(& model);
+				controller = & mut controller_main;
+				controller.reset();
+				view.clear(& mut stage);
+				view = & mut view_main;
 				view.init(& mut stage, & model);
 				stage.draw(& mut canvas);
 			},
 			GameStateEvent::RunGameOver => {
+				// update view to display the final scores
+				view.update(& mut stage, & model);
+				input = & mut input_any_key;
+				input.clear();
+				// model stays from main
 				controller = & mut controller_game_over;
+				controller.reset();
 				view.clear(& mut stage);
 				view = & mut view_game_over;
-				input = & mut input_game_over;
+				view.init(& mut stage, & model);
+				stage.draw(& mut canvas);
+			},
+			GameStateEvent::RunTitle => {
+				input = & mut input_any_key;
+				input.clear();
+				model = ModelFactory::model_title();
+				controller = & mut controller_title;
+				controller.reset();
+				view.clear(& mut stage);
+				view = & mut view_title;
 				view.init(& mut stage, & model);
 				stage.draw(& mut canvas);
 			},

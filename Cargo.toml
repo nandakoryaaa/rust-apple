@@ -4,7 +4,12 @@ version = "0.1.0"
 authors = ["ZDG"]
 edition = "2018"
 
+[dependencies]
+time = "0.1"
+
 [dependencies.sdl2]
 version = "0.34"
 default-features = false
-#features = ["image"]
+
+[profile.dev]
+overflow-checks = false

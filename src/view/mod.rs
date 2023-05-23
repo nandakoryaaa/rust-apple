@@ -120,9 +120,8 @@ impl View for ViewTitle {
 					self.factory.create_text(40, 200, Color::RGB(0, 255, 0), & "2023 GMO REMAKE BY ZDG")
 				);
 				stage.add_child(
-					self.factory.create_text(84, 224, Color::RGB(255, 0, 0), & "PRESS SPACE")
+					self.factory.create_text(72, 224, Color::RGB(255, 0, 0), & "PRESS ANY KEY")
 				);
-
 			},
 			_ => ()
 		}
@@ -204,8 +203,8 @@ impl View for ViewMain {
 				stage.add_child(self.factory.create_text(8, 233, Color::RGB(0, 255, 0), & "APPLES"));
 				self.num_collected_id = stage.add_child(self.factory.create_number(64, 233, Color::RGB(0, 255, 0), 0, 3));
 				//stage.add_child(self.factory.create_text(96, 233, Color::RGB(0, 255, 0), & "STRIKE!"));
-				stage.add_child(self.factory.create_text(160, 233, Color::RGB(0, 255, 0), & "DROPPED"));
-				self.num_lost_id = stage.add_child(self.factory.create_number(224, 233, Color::RGB(0, 255, 0), 0, 3));
+				stage.add_child(self.factory.create_text(168, 233, Color::RGB(255, 0, 0), & "WASTED"));
+				self.num_lost_id = stage.add_child(self.factory.create_number(224, 233, Color::RGB(255, 0, 0), 0, 3));
 				self.apple_id = stage.add_child(self.factory.create_apple(16, 16));
 			},
 			_ => ()
@@ -255,19 +254,47 @@ impl View for ViewGameOver {
 	fn init(& mut self, stage: & mut Stage, model: & Model) {
 		match model {
 			Model::ModelMain { data } => {
-				self.player_id = stage.add_child(
-					GMO::GmoSpriteAnimated {
-						x: data.player_x * self.grid_step_x,
-						y: data.grid_h as i32 * self.grid_step_y + 7,
-						w: 24,
-						h: 32,
-						state: PlayerAnimationState::Death,
-						looped: false,
-						frame: 0,
-						sequence: & self.factory.sq_player_death,
-						renderer: & self.factory.renderer_sprite_rle
+				if data.apples_collected == data.apple_cnt || data.apples_lost == data.apple_cnt {
+					self.player_id = stage.add_child(
+						GMO::GmoSpriteAnimated {
+							x: data.player_x * self.grid_step_x,
+							y: data.grid_h as i32 * self.grid_step_y + 7,
+							w: 24,
+							h: 32,
+							state: PlayerAnimationState::Stand,
+							looped: false,
+							frame: 0,
+							sequence: & self.factory.sq_player_stand,
+							renderer: & self.factory.renderer_sprite_rle
+						}
+					);
+					if data.apples_collected == data.apple_cnt {
+						stage.add_child(
+							self.factory.create_text(68, 124, Color::RGB(0, 255, 0), & "LEVEL COMPLETE!")
+						);
+					} else {
+						stage.add_child(
+							self.factory.create_text(72, 124, Color::RGB(255, 0, 0), & "APPLES WASTED!")
+						);
 					}
-				);
+				} else {
+					self.player_id = stage.add_child(
+						GMO::GmoSpriteAnimated {
+							x: data.player_x * self.grid_step_x,
+							y: data.grid_h as i32 * self.grid_step_y + 7,
+							w: 24,
+							h: 32,
+							state: PlayerAnimationState::Death,
+							looped: false,
+							frame: 0,
+							sequence: & self.factory.sq_player_death,
+							renderer: & self.factory.renderer_sprite_rle
+						}
+					);
+					stage.add_child(
+						self.factory.create_text(88, 124, Color::RGB(255, 0, 0), & "GAME OVER")
+					);
+				}
 			},
 			_ => ()
 		}
