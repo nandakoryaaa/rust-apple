@@ -61,9 +61,6 @@ for ($i = 1; $i < $linear_len; $i++) {
 
 encode($rle, $index, $len);
 
-$imgout = imagecreatetruecolor($w, $h);
-imagefilledrectangle($imgout, 0, 0, $w - 1, $h - 1, 0xffffff);
-
 $palette = array_flip($color_lut);
 $x = 0;
 $y = 0;
@@ -81,6 +78,9 @@ list($name, $ext) = explode('.', $filename);
 echo 'static ' . strtoupper($name) . ':[u8;' . count($rle) . '] = [' . implode(',', $rle) . "];\n";
 
 /* Uncomment to generate test image from RLE data and save as out.png
+
+$imgout = imagecreatetruecolor($w, $h);
+imagefilledrectangle($imgout, 0, 0, $w - 1, $h - 1, 0xffffff);
 
 while ($pos < $rle_len) {
 	$index = $rle[$pos++];
